@@ -1,8 +1,7 @@
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { ChartTooltip, ChartTooltipContent } from "./ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./ui/chart";
 
 const chartData = [
   { name: "Jan", total: 123 },
@@ -14,30 +13,39 @@ const chartData = [
   { name: "Jul", total: 412 },
 ];
 
+const chartConfig = {
+  total: {
+    label: "Sign-ups",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
+
 export function UserSignupChart() {
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData}>
-        <XAxis 
-          dataKey="name" 
-          stroke="hsl(var(--muted-foreground))" 
-          fontSize={12} 
-          tickLine={false} 
-          axisLine={false} 
-        />
-        <YAxis 
-          stroke="hsl(var(--muted-foreground))" 
-          fontSize={12} 
-          tickLine={false} 
-          axisLine={false} 
-          tickFormatter={(value) => `${value}`} 
-        />
-        <Tooltip
-            cursor={{fill: 'hsl(var(--muted))'}}
-            content={<ChartTooltipContent />}
-        />
-        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <ChartContainer config={chartConfig} className="w-full h-[350px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} accessibilityLayer>
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--muted-foreground))" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={false} 
+          />
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={false} 
+            tickFormatter={(value) => `${value}`} 
+          />
+          <Tooltip
+              cursor={{fill: 'hsl(var(--muted))'}}
+              content={<ChartTooltipContent />}
+          />
+          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
   )
 }
