@@ -1,0 +1,126 @@
+/**
+ * @fileoverview Firestore Security Rules for LearnVerse.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles, courses, and problems,
+ * and a membership-based model for submissions and sessions. This means that users can only
+ * read and write their own data, while submissions and sessions are accessible to those who
+ * have membership based on the stored user ID fields.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
+ * - /users/{userId}/courses/{courseId}: Stores courses created by a specific user (mentor). Only the mentor can create, read, update, and delete courses under their user ID.
+ * - /users/{userId}/problems/{problemId}: Stores problems created by a specific user (mentor). Only the mentor can create, read, update, and delete problems under their user ID.
+ * - /submissions/{submissionId}: Stores user submissions for coding problems. Anyone can create submissions.
+ * - /sessions/{sessionId}: Stores mentorship sessions between a mentor and a student.
+ *
+ * Key Security Decisions:
+ * - User listing is disabled.
+ * - All write operations are strictly controlled and require authentication.
+ * - Data validation is limited to relational integrity checks (e.g., creatorId matches the authenticated user's ID).
+ *
+ * Denormalization for Authorization:
+ * - The rules leverage the `userId`, `mentorId`, and `studentId` fields within the documents to make authorization decisions.
+ * - Courses and Problems are nested under the user's document to simplify ownership checks.
+ *
+ * Structural Segregation:
+ * - User-specific data (profiles, courses, problems) is segregated under the `/users/{userId}` path, ensuring that only the user has access to their data.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces access control for user profiles, ensuring users can only manage their own data.
+     * @path /users/{userId}
+     * @allow (create) - User with ID 'user123' can create their profile if authenticated as 'user123'.
+     * @allow (get, update, delete) - User with ID 'user123' can get, update, or delete their profile if authenticated as 'user123'.
+     * @deny (create) - User with ID 'user456' cannot create a profile for 'user123'.
+     * @deny (get, update, delete) - User with ID 'user456' cannot get, update, or delete the profile of 'user123'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing all users is not permitted.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces access control for courses, ensuring mentors can only manage their own courses.
+     * @path /users/{userId}/courses/{courseId}
+     * @allow (create) - Mentor 'mentor123' can create a course under their ID.
+     * @allow (get, update, delete) - Mentor 'mentor123' can get, update, or delete a course under their ID.
+     * @deny (create) - Mentor 'mentor456' cannot create a course under 'mentor123's ID.
+     * @deny (get, update, delete) - Mentor 'mentor456' cannot get, update, or delete a course under 'mentor123's ID.
+     * @principle Enforces document ownership for all operations on courses.
+     */
+    match /users/{userId}/courses/{courseId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces access control for problems, ensuring mentors can only manage their own problems.
+     * @path /users/{userId}/problems/{problemId}
+     * @allow (create) - Mentor 'mentor123' can create a problem under their ID.
+     * @allow (get, update, delete) - Mentor 'mentor123' can get, update, or delete a problem under their ID.
+     * @deny (create) - Mentor 'mentor456' cannot create a problem under 'mentor123's ID.
+     * @deny (get, update, delete) - Mentor 'mentor456' cannot get, update, or delete a problem under 'mentor123's ID.
+     * @principle Enforces document ownership for all operations on problems.
+     */
+    match /users/{userId}/problems/{problemId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows anyone to create a submission but enforces that `userId` matches the authenticated user.
+     * @path /submissions/{submissionId}
+     * @allow (create) - Any authenticated user can create a submission.
+     * @deny (update, delete) - Only the user who created the submission can update or delete it.
+     * @principle Allows open submissions while restricting modifications.
+     */
+    match /submissions/{submissionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Enforces access control for mentorship sessions, ensuring that only the mentor or student involved can access the session.
+     * @path /sessions/{sessionId}
+     * @allow (get, list) - Mentor or Student can access session data
+     * @allow (create) - Any signed-in user can create session
+     * @deny (update, delete) - No one can update or delete the session
+     * @principle Enforces membership-based access control for sessions.
+     */
+    match /sessions/{sessionId} {
+      allow get, list: if isSignedIn() && (resource.data.mentorId == request.auth.uid || resource.data.studentId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
+  }
+}

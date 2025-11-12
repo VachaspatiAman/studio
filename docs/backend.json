@@ -1,0 +1,299 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the LearnVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "User's role (Student, Mentor, Admin)."
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "Timestamp of the user's last activity.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "User's account status (active, inactive)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "role"
+      ]
+    },
+    "Course": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Course",
+      "type": "object",
+      "description": "Represents a course offered on the LearnVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the course."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the course."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the course."
+        },
+        "chapters": {
+          "type": "array",
+          "description": "List of chapters in the course.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Course) ID of the user who created the course."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the course was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "createdBy",
+        "createdAt"
+      ]
+    },
+    "Problem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Problem",
+      "type": "object",
+      "description": "Represents a coding problem available on the LearnVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the problem."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the problem."
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "Difficulty level of the problem (e.g., Easy, Medium, Hard)."
+        },
+        "testCases": {
+          "type": "array",
+          "description": "List of test cases for the problem.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Problem) ID of the user who created the problem."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "difficulty",
+        "createdBy"
+      ]
+    },
+    "Submission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Submission",
+      "type": "object",
+      "description": "Represents a user's submission for a coding problem.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the submission."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Submission) ID of the user who made the submission."
+        },
+        "problemId": {
+          "type": "string",
+          "description": "Reference to Problem. (Relationship: Problem 1:N Submission) ID of the problem that was submitted."
+        },
+        "code": {
+          "type": "string",
+          "description": "Code submitted by the user."
+        },
+        "result": {
+          "type": "string",
+          "description": "Result of the submission (e.g., Accepted, Wrong Answer)."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the submission was made.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "problemId",
+        "code",
+        "result",
+        "timestamp"
+      ]
+    },
+    "Session": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Session",
+      "type": "object",
+      "description": "Represents a mentorship session between a mentor and a student.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the session."
+        },
+        "mentorId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Session) ID of the mentor for the session."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Session) ID of the student for the session."
+        },
+        "time": {
+          "type": "string",
+          "description": "Timestamp of when the session took place.",
+          "format": "date-time"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback provided for the session."
+        }
+      },
+      "required": [
+        "id",
+        "mentorId",
+        "studentId",
+        "time"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles.  User ID is used as the document ID. Includes standard user profile information like name, email, role, status, and last seen. Path-based ownership for private user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/courses/{courseId}",
+        "definition": {
+          "entityName": "Course",
+          "schema": {
+            "$ref": "#/backend/entities/Course"
+          },
+          "description": "Stores courses created by a specific user (Mentor). Includes the course title, description, chapters, and creation timestamp. Uses path-based ownership. The 'userId' param indicates the mentor who created the course.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Mentor) who created the course."
+            },
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/problems/{problemId}",
+        "definition": {
+          "entityName": "Problem",
+          "schema": {
+            "$ref": "#/backend/entities/Problem"
+          },
+          "description": "Stores coding problems created by a specific user (Mentor). Includes the problem title, difficulty, and test cases. Uses path-based ownership. The 'userId' param indicates the mentor who created the problem.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Mentor) who created the coding problem."
+            },
+            {
+              "name": "problemId",
+              "description": "The unique identifier of the problem."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/submissions/{submissionId}",
+        "definition": {
+          "entityName": "Submission",
+          "schema": {
+            "$ref": "#/backend/entities/Submission"
+          },
+          "description": "Stores user submissions for coding problems. Includes the user ID, problem ID, code, result, and timestamp.",
+          "params": [
+            {
+              "name": "submissionId",
+              "description": "The unique identifier of the submission."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sessions/{sessionId}",
+        "definition": {
+          "entityName": "Session",
+          "schema": {
+            "$ref": "#/backend/entities/Session"
+          },
+          "description": "Stores mentorship sessions between a mentor and a student. Includes mentor ID, student ID, time, and feedback.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique identifier of the session."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support a role-based online learning platform (LearnVerse) with Students, Mentors, and Admins. The design emphasizes authorization independence via denormalization to ensure robust security rules and efficient data access. This structure uses segregation, membership maps, and path-based ownership for clarity and security.  \n\nAuthorization Independence is achieved by denormalizing authorization data. For example, if access to a Course depended on the creator's role, the role would be copied into the course document, avoiding `get()` calls in security rules. Similarly, for collaborative data like Sessions, the members map (mentorId and studentId in this case) is stored directly within the session document.\n\nQAPs are supported through structural segregation and membership models. Private user data is stored under `/users/{userId}`. Courses and Problems created by Mentors are also segregated under `/users/{userId}/courses` and `/users/{userId}/problems` respectively allowing list operations to be secured based on ownership. Collaborative data such as Sessions uses Membership Maps to define access, enabling secure listing and access based on membership."
+  }
+}
