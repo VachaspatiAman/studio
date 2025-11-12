@@ -20,9 +20,9 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.endsWith('@admin.com')) {
+    if (email.endsWith('.admin@gmail.com')) {
       router.push('/admin/dashboard');
-    } else if (email.endsWith('@mentor.com')) {
+    } else if (email.endsWith('.mentor@gmail.com')) {
       router.push('/mentor/dashboard');
     } else {
       router.push('/student/dashboard');
@@ -60,7 +60,7 @@ export default function LoginPage() {
               </Button>
             </form>
              <p className="mt-4 text-center text-xs text-muted-foreground">
-                Use an email ending in <code className="font-semibold text-foreground">@mentor.com</code> for a mentor, <code className="font-semibold text-foreground">@admin.com</code> for an admin, or any other email for a student.
+                Use an email ending in <code className="font-semibold text-foreground">.mentor@gmail.com</code> for a mentor, <code className="font-semibold text-foreground">.admin@gmail.com</code> for an admin, or any other email for a student.
               </p>
           </CardContent>
         </Card>
