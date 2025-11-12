@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,14 +22,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-const initialRecentUsers = [
-  { name: "Olivia Martin", email: "olivia.martin@email.com", role: "Student", status: "Active" },
-  { name: "Jackson Lee", email: "jackson.lee@email.com", role: "Student", status: "Active" },
-  { name: "Isabella Nguyen", email: "isabella.nguyen@email.com", role: "Mentor", status: "Active" },
-  { name: "William Kim", email: "will@email.com", role: "Student", status: "Inactive" },
-  { name: "Sofia Davis", email: "sofia.davis@email.com", role: "Mentor", status: "Pending" },
-];
+import { useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { collection } from "firebase/firestore";
 
 const platformStats = [
   { title: "Total Users", value: "1,482", icon: <Users className="h-6 w-6 text-muted-foreground" /> },
@@ -39,15 +34,22 @@ const platformStats = [
 ];
 
 export default function AdminDashboardPage() {
-  const [recentUsers, setRecentUsers] = useState(initialRecentUsers);
   const [newMentorName, setNewMentorName] = useState("");
   const [newMentorEmail, setNewMentorEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
+
+  const usersCollectionRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'users') : null),
+    [firestore]
+  );
+  const { data: users, isLoading: usersLoading } = useCollection(usersCollectionRef);
 
   const handleAddMentor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMentorName && newMentorEmail) {
+    if (newMentorName && newMentorEmail && usersCollectionRef) {
       if (!newMentorEmail.endsWith('.mentor@gmail.com')) {
          toast({
           variant: "destructive",
@@ -63,7 +65,9 @@ export default function AdminDashboardPage() {
         role: "Mentor",
         status: "Pending",
       };
-      setRecentUsers([newUser, ...recentUsers]);
+
+      addDocumentNonBlocking(usersCollectionRef, newUser);
+
       setNewMentorName("");
       setNewMentorEmail("");
       setIsDialogOpen(false);
@@ -114,11 +118,11 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentUsers.slice(0, 5).map(user => (
+                {users && users.slice(0, 5).map(user => (
                   <div key={user.email} className="flex items-center">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar" />
-                      <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback>{user.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="ml-4 space-y-1">
                       <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -201,8 +205,13 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentUsers.map(user => (
-                  <TableRow key={user.email}>
+                {usersLoading && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                )}
+                {users && users.map(user => (
+                  <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
                       <div className="text-sm text-muted-foreground">{user.email}</div>
@@ -233,5 +242,3 @@ export default function AdminDashboardPage() {
     </DashboardLayout>
   );
 }
-
-    
