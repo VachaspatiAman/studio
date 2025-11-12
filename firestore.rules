@@ -35,14 +35,14 @@ service cloud.firestore {
      * @description Enforces access control for user profiles. Admins can manage all users, while individuals can only manage their own profile.
      * @path /users/{userId}
      * @allow (get, update, delete) - User can manage their own profile. Admin can manage any profile.
-     * @allow (create) - Any authenticated user can create a user document. This is required for admins to add mentors.
+     * @allow (create) - Any authenticated user can create a user document for themselves, or an admin can create one.
      * @allow (list) - Any authenticated user can list users.
      * @principle Enforces document ownership and admin override.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isSignedIn();
-      allow create: if isSignedIn();
+      allow create: if isCreatingOwnDocument(userId) || isAdmin();
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
@@ -118,6 +118,10 @@ service cloud.firestore {
 
   function isOwner(userId) {
     return isSignedIn() && request.auth.uid == userId;
+  }
+  
+  function isCreatingOwnDocument(userId) {
+    return isOwner(userId) && request.resource.data.email == request.auth.token.email;
   }
 
   function isExistingOwner(userId) {
