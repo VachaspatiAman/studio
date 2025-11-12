@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -12,13 +13,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GraduationCap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
+import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const router = useRouter();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (auth && !user && !isUserLoading) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [auth, user, isUserLoading]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +40,17 @@ export default function LoginPage() {
       router.push('/student/dashboard');
     }
   };
+
+  if (isUserLoading || !user) {
+    return (
+        <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+            <div className="flex items-center gap-2">
+                <GraduationCap className="h-10 w-10 animate-pulse text-primary" />
+                <p className="text-muted-foreground">Connecting...</p>
+            </div>
+        </main>
+    )
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
