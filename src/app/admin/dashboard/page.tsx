@@ -1,11 +1,35 @@
+
+'use client';
+
+import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, BookOpen, Code2, Video, UserCog } from "lucide-react";
+import { Users, BookOpen, Code2, Video, UserCog, PlusCircle } from "lucide-react";
 import { UserSignupChart } from "@/components/user-signup-chart";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+
+const initialRecentUsers = [
+  { name: "Olivia Martin", email: "olivia.martin@email.com", role: "Student", status: "Active" },
+  { name: "Jackson Lee", email: "jackson.lee@email.com", role: "Student", status: "Active" },
+  { name: "Isabella Nguyen", email: "isabella.nguyen@email.com", role: "Mentor", status: "Active" },
+  { name: "William Kim", email: "will@email.com", role: "Student", status: "Inactive" },
+  { name: "Sofia Davis", email: "sofia.davis@email.com", role: "Mentor", status: "Pending" },
+];
 
 const platformStats = [
   { title: "Total Users", value: "1,482", icon: <Users className="h-6 w-6 text-muted-foreground" /> },
@@ -14,15 +38,43 @@ const platformStats = [
   { title: "Active Users", value: "350", icon: <Video className="h-6 w-6 text-muted-foreground" /> },
 ];
 
-const recentUsers = [
-  { name: "Olivia Martin", email: "olivia.martin@email.com", role: "Student", status: "Active" },
-  { name: "Jackson Lee", email: "jackson.lee@email.com", role: "Student", status: "Active" },
-  { name: "Isabella Nguyen", email: "isabella.nguyen@email.com", role: "Mentor", status: "Active" },
-  { name: "William Kim", email: "will@email.com", role: "Student", status: "Inactive" },
-  { name: "Sofia Davis", email: "sofia.davis@email.com", role: "Mentor", status: "Pending" },
-];
-
 export default function AdminDashboardPage() {
+  const [recentUsers, setRecentUsers] = useState(initialRecentUsers);
+  const [newMentorName, setNewMentorName] = useState("");
+  const [newMentorEmail, setNewMentorEmail] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleAddMentor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newMentorName && newMentorEmail) {
+      if (!newMentorEmail.endsWith('.mentor@gmail.com')) {
+         toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Mentor email must end with .mentor@gmail.com",
+        });
+        return;
+      }
+
+      const newUser = {
+        name: newMentorName,
+        email: newMentorEmail,
+        role: "Mentor",
+        status: "Pending",
+      };
+      setRecentUsers([newUser, ...recentUsers]);
+      setNewMentorName("");
+      setNewMentorEmail("");
+      setIsDialogOpen(false);
+      toast({
+        title: "Mentor Added",
+        description: `${newUser.name} has been added as a mentor.`,
+      });
+    }
+  };
+
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8">
@@ -62,7 +114,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentUsers.map(user => (
+                {recentUsers.slice(0, 5).map(user => (
                   <div key={user.email} className="flex items-center">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar" />
@@ -83,9 +135,60 @@ export default function AdminDashboardPage() {
         </div>
 
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-headline text-2xl">User Management</CardTitle>
-            <CardDescription>View and manage all users on the platform.</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle className="font-headline text-2xl">User Management</CardTitle>
+                <CardDescription>View and manage all users on the platform.</CardDescription>
+            </div>
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Mentor
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Mentor</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of the new mentor. Their status will be set to 'Pending'.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddMentor}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        Name
+                      </Label>
+                      <Input
+                        id="name"
+                        value={newMentorName}
+                        onChange={(e) => setNewMentorName(e.target.value)}
+                        className="col-span-3"
+                        placeholder="e.g. Jane Doe"
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="email" className="text-right">
+                        Email
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newMentorEmail}
+                        onChange={(e) => setNewMentorEmail(e.target.value)}
+                        className="col-span-3"
+                        placeholder="e.g. mentor@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">Add Mentor</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             <Table>
