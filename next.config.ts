@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  devIndicators: {
+    buildActivity: false,
+  },
+  experimental: {
+    // This allows requests from the preview environment to the Next.js server.
+    // In a real production app, you'd want to be more specific with the origin.
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
+  }
 };
 
 export default nextConfig;
