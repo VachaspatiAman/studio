@@ -178,7 +178,7 @@ export default function AdminDashboardPage() {
                         value={newMentorEmail}
                         onChange={(e) => setNewMentorEmail(e.target.value)}
                         className="col-span-3"
-                        placeholder="e.g. mentor@example.com"
+                        placeholder="e.g. name.mentor@gmail.com"
                         required
                       />
                     </div>
@@ -233,3 +233,5 @@ export default function AdminDashboardPage() {
     </DashboardLayout>
   );
 }
+
+    
