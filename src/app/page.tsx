@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { GraduationCap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -49,7 +51,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Enter your email to log in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -62,6 +64,19 @@ export default function LoginPage() {
              <p className="mt-4 text-center text-xs text-muted-foreground">
                 Use an email ending in <code className="font-semibold text-foreground">.mentor@gmail.com</code> for a mentor, <code className="font-semibold text-foreground">.admin@gmail.com</code> for an admin, or any other email for a student.
               </p>
+              
+              <div className="my-4 flex items-center">
+                <Separator className="flex-1" />
+                <span className="mx-4 text-xs text-muted-foreground">OR</span>
+                <Separator className="flex-1" />
+              </div>
+
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/register">
+                  Create a Student Account
+                </Link>
+              </Button>
+
           </CardContent>
         </Card>
       </div>
