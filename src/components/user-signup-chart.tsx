@@ -23,29 +23,27 @@ const chartConfig = {
 export function UserSignupChart() {
   return (
     <ChartContainer config={chartConfig} className="w-full h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} accessibilityLayer>
-          <XAxis 
-            dataKey="name" 
-            stroke="hsl(var(--muted-foreground))" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
-          />
-          <YAxis 
-            stroke="hsl(var(--muted-foreground))" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
-            tickFormatter={(value) => `${value}`} 
-          />
-          <Tooltip
-              cursor={{fill: 'hsl(var(--muted))'}}
-              content={<ChartTooltipContent />}
-          />
-          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <BarChart accessibilityLayer data={chartData}>
+        <XAxis
+          dataKey="name"
+          tickLine={false}
+          axisLine={false}
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={12}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={12}
+          tickFormatter={(value) => `${value}`}
+        />
+        <Tooltip
+            cursor={{fill: 'hsl(var(--muted))'}}
+            content={<ChartTooltipContent />}
+        />
+        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+      </BarChart>
     </ChartContainer>
   )
 }
